@@ -1,0 +1,9 @@
+flask
+requests
+python-dotenv
+gunicorn
+requests
+transformers
+datasets
+peft
+accelerate

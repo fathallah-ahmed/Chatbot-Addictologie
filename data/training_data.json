@@ -1,0 +1,14 @@
+[
+  {
+    "prompt": "Comment arrêter de fumer ?",
+    "response": "Essayez d’abord de réduire progressivement et demandez l’aide d’un tabacologue."
+  },
+  {
+    "prompt": "Quels sont les effets du cannabis ?",
+    "response": "Le cannabis affecte la concentration et la mémoire, surtout à long terme."
+  },
+  {
+    "prompt": "Quels sont les effets de l’alcool ?",
+    "response": "Une consommation excessive peut provoquer des maladies du foie et du cœur."
+  }
+]
