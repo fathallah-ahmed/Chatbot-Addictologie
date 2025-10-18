@@ -19,7 +19,7 @@ from huggingface_hub import InferenceClient
 from huggingface_hub.errors import HfHubHTTPError
 
 
-HF_TOKEN = ""  # <- remplace par ton token
+HF_TOKEN = "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"  # <- remplace par ton token
 MODEL_ID = "google/gemma-2-9b-it"  # ou TinyLlama/... ou meta-llama/... selon ton choix
 
 # Paramètres par défaut
