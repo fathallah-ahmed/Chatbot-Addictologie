@@ -3,6 +3,7 @@ let currentSpeech = null;
 let selectedVoice = null;
 let recognition = null;
 let isListening = false;
+let recognitionTimeout = null;
 
 // Initialisation au chargement de la page
 document.addEventListener('DOMContentLoaded', function() {
@@ -22,7 +23,7 @@ function initializeEventListeners() {
     // Entrée clavier dans le champ de saisie
     document.getElementById('userInput').addEventListener('keypress', handleKeyPress);
     
-    // BOUTON MICRO AJOUTÉ ICI
+    // Bouton micro
     document.getElementById('voiceBtn').addEventListener('click', toggleSpeechRecognition);
     
     // Suggestions rapides
@@ -41,128 +42,200 @@ function initializeEventListeners() {
     });
 }
 
-// INITIALISATION DE LA RECONNAISSANCE VOCALE AJOUTÉE ICI
+// Initialisation de la reconnaissance vocale CORRIGÉE
 function initializeSpeechRecognition() {
     // Vérifier la compatibilité du navigateur
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
         console.warn('La reconnaissance vocale n\'est pas supportée par ce navigateur');
         document.getElementById('voiceBtn').style.display = 'none';
         updateVoiceStatus('error', 'Reconnaissance vocale non supportée');
         return;
     }
 
-    // Créer l'instance de reconnaissance vocale
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognition = new SpeechRecognition();
-    
-    // Configuration
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.lang = 'fr-FR';
-    recognition.maxAlternatives = 1;
+    try {
+        // Créer l'instance de reconnaissance vocale
+        recognition = new SpeechRecognition();
+        
+        // Configuration OPTIMISÉE
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = 'fr-FR';
+        recognition.maxAlternatives = 3; // Augmenté pour plus de précision
+        
+        // Événements de reconnaissance
+        recognition.onstart = function() {
+            console.log('🎤 Reconnaissance vocale démarrée');
+            isListening = true;
+            updateVoiceStatus('listening');
+            
+            // Timeout de sécurité pour éviter les blocages
+            clearTimeout(recognitionTimeout);
+            recognitionTimeout = setTimeout(() => {
+                if (isListening) {
+                    console.log('⏱️ Timeout de sécurité - arrêt de la reconnaissance');
+                    recognition.stop();
+                }
+            }, 10000); // 10 secondes max
+        };
 
-    // Événements de reconnaissance
-    recognition.onstart = function() {
-        console.log('Reconnaissance vocale démarrée');
-        isListening = true;
-        updateVoiceStatus('listening');
-    };
+        recognition.onresult = function(event) {
+            console.log('🎯 Résultat de reconnaissance reçu');
+            let finalTranscript = '';
+            let interimTranscript = '';
 
-    recognition.onresult = function(event) {
-        let finalTranscript = '';
-        let interimTranscript = '';
-
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            const transcript = event.results[i][0].transcript;
-            if (event.results[i].isFinal) {
-                finalTranscript += transcript;
-            } else {
-                interimTranscript += transcript;
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const result = event.results[i];
+                const transcript = result[0].transcript;
+                
+                if (result.isFinal) {
+                    finalTranscript += transcript + ' ';
+                } else {
+                    interimTranscript += transcript;
+                }
             }
-        }
 
-        // Mettre à jour le champ de saisie avec le texte transcrit
-        const userInput = document.getElementById('userInput');
-        userInput.value = finalTranscript || interimTranscript;
-        
-        if (finalTranscript) {
-            updateVoiceStatus('success', 'Texte transcrit avec succès');
-        }
-    };
+            // Mettre à jour le champ de saisie
+            const userInput = document.getElementById('userInput');
+            
+            if (finalTranscript) {
+                userInput.value = finalTranscript.trim();
+                updateVoiceStatus('success', 'Texte transcrit avec succès');
+                
+                // Arrêter automatiquement après un résultat final
+                setTimeout(() => {
+                    if (isListening) {
+                        recognition.stop();
+                    }
+                }, 500);
+                
+            } else if (interimTranscript) {
+                userInput.value = interimTranscript;
+                updateVoiceStatus('listening', 'En cours de transcription...');
+            }
+        };
 
-    recognition.onerror = function(event) {
-        console.error('Erreur de reconnaissance vocale:', event.error);
-        isListening = false;
-        
-        let errorMessage = 'Erreur de reconnaissance';
-        switch (event.error) {
-            case 'not-allowed':
-                errorMessage = 'Microphone non autorisé. Veuillez autoriser l\'accès au microphone.';
-                break;
-            case 'audio-capture':
-                errorMessage = 'Aucun microphone détecté.';
-                break;
-            case 'network':
-                errorMessage = 'Erreur réseau lors de la reconnaissance.';
-                break;
-            default:
-                errorMessage = 'Erreur: ' + event.error;
-        }
-        
-        updateVoiceStatus('error', errorMessage);
-    };
+        recognition.onerror = function(event) {
+            console.error('❌ Erreur de reconnaissance vocale:', event.error);
+            isListening = false;
+            clearTimeout(recognitionTimeout);
+            
+            let errorMessage = 'Erreur de reconnaissance';
+            switch (event.error) {
+                case 'not-allowed':
+                case 'permission-denied':
+                    errorMessage = 'Microphone non autorisé. Veuillez autoriser l\'accès au microphone dans les paramètres de votre navigateur.';
+                    break;
+                case 'audio-capture':
+                    errorMessage = 'Aucun microphone détecté. Vérifiez votre périphérique audio.';
+                    break;
+                case 'network':
+                    errorMessage = 'Erreur réseau. Vérifiez votre connexion internet.';
+                    break;
+                case 'no-speech':
+                    errorMessage = 'Aucune parole détectée. Veuillez parler plus fort ou plus clairement.';
+                    break;
+                case 'aborted':
+                    errorMessage = 'Reconnaissance annulée.';
+                    break;
+                default:
+                    errorMessage = 'Erreur technique: ' + event.error;
+            }
+            
+            updateVoiceStatus('error', errorMessage);
+            
+            // Réinitialiser après une erreur
+            setTimeout(() => {
+                updateVoiceStatus('idle');
+            }, 3000);
+        };
 
-    recognition.onend = function() {
-        console.log('Reconnaissance vocale terminée');
-        isListening = false;
-        if (!document.getElementById('voiceStatus').classList.contains('error')) {
-            updateVoiceStatus('idle');
-        }
-    };
+        recognition.onend = function() {
+            console.log('🛑 Reconnaissance vocale terminée');
+            isListening = false;
+            clearTimeout(recognitionTimeout);
+            
+            if (!document.getElementById('voiceStatus').classList.contains('error')) {
+                updateVoiceStatus('idle');
+            }
+        };
+
+        console.log('✅ Reconnaissance vocale initialisée avec succès');
+
+    } catch (error) {
+        console.error('❌ Erreur lors de l\'initialisation de la reconnaissance:', error);
+        updateVoiceStatus('error', 'Erreur d\'initialisation: ' + error.message);
+    }
 }
 
-// FONCTION POUR BASUCLER LA RECONNAISSANCE VOCALE
+// Fonction pour basculer la reconnaissance vocale AMÉLIORÉE
 function toggleSpeechRecognition() {
     if (!recognition) {
         updateVoiceStatus('error', 'Reconnaissance vocale non disponible');
         return;
     }
 
+    // Arrêter la synthèse vocale en cours
+    if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+    }
+
     if (isListening) {
+        console.log('🛑 Arrêt manuel de la reconnaissance');
         recognition.stop();
         updateVoiceStatus('idle');
     } else {
         try {
+            console.log('🎤 Démarrage de la reconnaissance vocale');
+            
             // Vider le champ de saisie avant de commencer
             document.getElementById('userInput').value = '';
-            recognition.start();
-            updateVoiceStatus('starting');
+            
+            // Délai court pour éviter les conflits
+            setTimeout(() => {
+                recognition.start();
+                updateVoiceStatus('starting');
+            }, 100);
+            
         } catch (error) {
-            console.error('Erreur au démarrage:', error);
-            updateVoiceStatus('error', 'Impossible de démarrer la reconnaissance');
+            console.error('❌ Erreur au démarrage:', error);
+            
+            if (error.message.includes('already started')) {
+                // La reconnaissance est déjà en cours, on l'arrête et on redémarre
+                recognition.stop();
+                setTimeout(() => {
+                    recognition.start();
+                    updateVoiceStatus('starting');
+                }, 500);
+            } else {
+                updateVoiceStatus('error', 'Impossible de démarrer: ' + error.message);
+            }
         }
     }
 }
 
-// FONCTION POUR METTRE À JOUR LE STATUT DE LA DICTÉE
+// Fonction pour mettre à jour le statut de la dictée
 function updateVoiceStatus(state, message = '') {
     const voiceBtn = document.getElementById('voiceBtn');
     const voiceStatus = document.getElementById('voiceStatus');
     const userInput = document.getElementById('userInput');
 
     // Réinitialiser les classes
-    voiceBtn.classList.remove('listening', 'error', 'success');
+    voiceBtn.classList.remove('listening', 'error', 'success', 'starting');
     voiceStatus.className = 'voice-status';
 
     switch (state) {
         case 'starting':
-            voiceStatus.innerHTML = '🎤 Initialisation de la reconnaissance...';
+            voiceBtn.classList.add('starting');
+            voiceStatus.innerHTML = '🎤 Initialisation...';
             voiceStatus.classList.add('info');
+            userInput.placeholder = 'Initialisation du micro...';
             break;
 
         case 'listening':
             voiceBtn.classList.add('listening');
-            voiceStatus.innerHTML = '🎤 Écoute en cours... Parlez maintenant';
+            voiceStatus.innerHTML = '🎤 ' + (message || 'Écoute en cours... Parlez maintenant');
             voiceStatus.classList.add('listening');
             userInput.placeholder = 'Parlez maintenant...';
             break;
@@ -178,11 +251,12 @@ function updateVoiceStatus(state, message = '') {
             voiceBtn.classList.add('error');
             voiceStatus.innerHTML = `❌ ${message}`;
             voiceStatus.classList.add('error');
-            userInput.placeholder = 'Tapez votre message ou utilisez le micro...';
+            userInput.placeholder = 'Tapez votre message...';
             break;
 
         case 'idle':
         default:
+            voiceBtn.classList.remove('listening', 'error', 'success');
             voiceStatus.innerHTML = '🎤 Cliquez sur le micro pour dicter un message';
             voiceStatus.classList.add('idle');
             userInput.placeholder = 'Tapez votre message ou utilisez le micro...';
@@ -195,7 +269,6 @@ function startChatTransition() {
     const heroSection = document.getElementById('heroSection');
     const chatbotInterface = document.getElementById('chatbotInterface');
     
-    // Animation de disparition de la section hero
     heroSection.style.opacity = '0';
     heroSection.style.transform = 'translateY(-20px)';
     
@@ -203,7 +276,6 @@ function startChatTransition() {
         heroSection.style.display = 'none';
         chatbotInterface.style.display = 'flex';
         
-        // Animation d'apparition du chatbot
         setTimeout(() => {
             chatbotInterface.style.opacity = '1';
             chatbotInterface.style.transform = 'translateY(0)';
@@ -214,9 +286,7 @@ function startChatTransition() {
 // Système de voix
 function findBestFrenchVoice() {
     const voices = window.speechSynthesis.getVoices();
-    console.log('Voix disponibles:', voices.map(v => `${v.name} (${v.lang})`));
     
-    // Priorité des voix par qualité
     const voicePreferences = [
         voice => voice.name.includes('Google français') || voice.name.includes('Google French'),
         voice => voice.name.includes('Microsoft') && voice.name.includes('French'),
@@ -228,12 +298,10 @@ function findBestFrenchVoice() {
     for (const preference of voicePreferences) {
         const voice = voices.find(preference);
         if (voice) {
-            console.log('Voix sélectionnée:', voice.name, voice.lang);
             return voice;
         }
     }
 
-    console.warn('Aucune voix française trouvée, utilisation de la voix par défaut');
     return voices[0] || null;
 }
 
@@ -251,7 +319,7 @@ function initializeVoices() {
     }
 }
 
-// Charger les voix quand elles sont disponibles
+// Charger les voix
 if (window.speechSynthesis.onvoiceschanged !== undefined) {
     window.speechSynthesis.onvoiceschanged = initializeVoices;
 }
