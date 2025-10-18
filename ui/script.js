@@ -4,6 +4,13 @@ let selectedVoice = null;
 let recognition = null;
 let isListening = false;
 let recognitionTimeout = null;
+let isFirstInteraction = true; // NOUVEAU: pour suivre la première interaction
+
+// Configuration de l'API
+const API_CONFIG = {
+    URL: 'http://127.0.0.1:5000/ask',
+    TIMEOUT: 30000
+};
 
 // Initialisation au chargement de la page
 document.addEventListener('DOMContentLoaded', function() {
@@ -26,10 +33,11 @@ function initializeEventListeners() {
     // Bouton micro
     document.getElementById('voiceBtn').addEventListener('click', toggleSpeechRecognition);
     
-    // Suggestions rapides
+    // Suggestions rapides - MODIFIÉ pour utiliser handleUserMessage
     document.querySelectorAll('.suggestion').forEach(suggestion => {
         suggestion.addEventListener('click', function() {
-            sendSuggestion(this.getAttribute('data-text'));
+            const suggestionText = this.getAttribute('data-text');
+            handleUserMessage(suggestionText);
         });
     });
     
@@ -42,6 +50,172 @@ function initializeEventListeners() {
     });
 }
 
+// NOUVELLE FONCTION: Gérer les messages utilisateur (unifie l'envoi)
+async function handleUserMessage(message) {
+    if (message.trim() === '') return;
+
+    // Ajouter le message de l'utilisateur
+    addUserMessage(message);
+    
+    // Afficher un indicateur de chargement
+    const loadingMessage = addLoadingMessage();
+    
+    try {
+        let botResponse;
+        
+        // Si c'est la première interaction, utiliser les réponses par défaut
+        if (isFirstInteraction) {
+            botResponse = getDefaultResponse(message);
+            isFirstInteraction = false; // Passer au backend pour les prochaines interactions
+        } else {
+            // Utiliser l'API backend pour les interactions suivantes
+            botResponse = await callChatbotAPI(message);
+        }
+        
+        // Supprimer le message de chargement
+        removeLoadingMessage(loadingMessage);
+        
+        // Ajouter la réponse du bot
+        addBotMessage(botResponse);
+        
+    } catch (error) {
+        // En cas d'erreur, supprimer le loading et afficher un message d'erreur
+        removeLoadingMessage(loadingMessage);
+        
+        const errorMessage = "Désolé, je rencontre des difficultés techniques. Pouvez-vous réessayer ?";
+        addBotMessage(errorMessage);
+        
+        console.error('Erreur dans handleUserMessage:', error);
+    }
+
+    // Vider le champ de saisie
+    document.getElementById('userInput').value = '';
+    updateVoiceStatus('idle');
+}
+
+// FONCTION: Réponses par défaut pour la première interaction
+function getDefaultResponse(userMessage) {
+    const defaultResponses = {
+        // Réponses pour les suggestions
+        "Je souhaite arrêter de fumer": "Excellent décision ! L'arrêt du tabac est l'une des meilleures choses que vous puissiez faire pour votre santé. Je peux vous accompagner avec des stratégies personnalisées. Parlez-moi de votre consommation actuelle.",
+        "J'aimerais réduire ma consommation d'alcool": "Je vous comprends. La réduction de la consommation d'alcool peut avoir des bénéfices importants sur la santé. Pouvez-vous me décrire vos habitudes actuelles ?",
+        "J'ai besoin d'aide pour une addiction": "Je suis là pour vous aider. Pouvez-vous me parler de ce qui vous préoccupe particulièrement ? Plus vous me donnerez de détails, mieux je pourrai vous orienter.",
+        
+        // Réponses génériques
+        "bonjour": "Bonjour ! Je suis NAFASS, votre assistant spécialisé en addictologie. Comment puis-je vous aider aujourd'hui ?",
+        "salut": "Salut ! Je suis là pour vous accompagner. De quoi aimeriez-vous parler ?",
+        "merci": "Je vous en prie ! N'hésitez pas si vous avez d'autres questions ou préoccupations.",
+        "aide": "Bien sûr ! Je peux vous aider avec les addictions au tabac, à l'alcool, aux drogues, ou d'autres dépendances. De quoi avez-vous besoin ?"
+    };
+
+    // Chercher une réponse spécifique, sinon réponse générique
+    const lowerMessage = userMessage.toLowerCase();
+    
+    for (const [key, response] of Object.entries(defaultResponses)) {
+        if (lowerMessage.includes(key.toLowerCase())) {
+            return response;
+        }
+    }
+
+    // Réponse par défaut si aucun match
+    return "Je comprends votre message. Pour vous offrir le meilleur accompagnement, je vais maintenant utiliser mes connaissances spécialisées. Pouvez-vous reformuler votre question ?";
+}
+
+// FONCTION: Appeler l'API backend
+async function callChatbotAPI(question) {
+    console.log('📡 Envoi à l\'API backend:', question);
+    
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
+
+        const response = await fetch(API_CONFIG.URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                question: question
+            }),
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ Réponse du backend:', data);
+        
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
+        return data.answer;
+        
+    } catch (error) {
+        console.error('❌ Erreur API:', error);
+        
+        if (error.name === 'AbortError') {
+            throw new Error('La requête a pris trop de temps. Veuillez réessayer.');
+        }
+        
+        if (error.message.includes('Failed to fetch')) {
+            throw new Error('Impossible de se connecter au serveur. Vérifiez que le backend est démarré.');
+        }
+        
+        throw error;
+    }
+}
+
+// FONCTION: Ajouter un message de chargement
+function addLoadingMessage() {
+    const chatMessages = document.getElementById('chatMessages');
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'message bot-message loading';
+    loadingDiv.id = 'loading-message';
+    loadingDiv.innerHTML = `
+        <div class="message-avatar">
+            <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" alt="NAFASS">
+        </div>
+        <div class="message-content">
+            <p>NAFASS réfléchit...</p>
+            <div class="loading-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    `;
+    chatMessages.appendChild(loadingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    return loadingDiv;
+}
+
+// FONCTION: Supprimer le message de chargement
+function removeLoadingMessage(loadingElement) {
+    if (loadingElement && loadingElement.parentNode) {
+        loadingElement.parentNode.removeChild(loadingElement);
+    }
+}
+
+// MODIFICATION: Fonction sendMessage utilisant handleUserMessage
+function sendMessage() {
+    const userInput = document.getElementById('userInput');
+    const message = userInput.value.trim();
+    handleUserMessage(message);
+}
+
+// MODIFICATION: Fonction sendSuggestion utilisant handleUserMessage
+function sendSuggestion(text) {
+    document.getElementById('userInput').value = text;
+    handleUserMessage(text);
+}
+
+// Le reste du code reste identique (STT, TTS, etc.)
 // Initialisation de la reconnaissance vocale CORRIGÉE
 function initializeSpeechRecognition() {
     // Vérifier la compatibilité du navigateur
@@ -394,34 +568,6 @@ function handleKeyPress(event) {
     if (event.key === 'Enter') {
         sendMessage();
     }
-}
-
-function sendSuggestion(text) {
-    document.getElementById('userInput').value = text;
-    sendMessage();
-}
-
-function sendMessage() {
-    const userInput = document.getElementById('userInput');
-    const message = userInput.value.trim();
-    
-    if (message === '') return;
-
-    addUserMessage(message);
-    
-    setTimeout(() => {
-        const responses = [
-            "Je comprends votre situation. Pouvez-vous me en dire plus sur ce qui vous motive à changer ?",
-            "Merci de partager cela avec moi. Comment vous sentez-vous par rapport à cette situation ?",
-            "C'est un bon début de reconnaître ces difficultés. Quel est votre objectif principal ?",
-            "Je suis là pour vous accompagner. Depuis combien de temps cette situation dure-t-elle ?"
-        ];
-        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-        addBotMessage(randomResponse);
-    }, 1000);
-
-    userInput.value = '';
-    updateVoiceStatus('idle');
 }
 
 function addUserMessage(text) {

@@ -1,21 +1,17 @@
 """
 FICHIER: app.py
 STATUT: PRODUCTION - Point d'entrée principal de l'API Flask
-
-FONCTION: Exposition des endpoints REST pour le chatbot d'addictions
-ARCHITECTURE: API Flask avec intégration RAG + LLM
-ENDPOINT: /ask (POST) - Réception des questions et retour des réponses contextualisées
-
-FLUX: Question → RAG  → LLM (génération) → Réponse enrichie
-Validation des entrées + gestion d'erreurs complète
 """
 
 from flask import Flask, request, jsonify
+from flask_cors import CORS  # AJOUT
 from llm_service import call_llm
 from rag_service import RAGRetriever
 
 app = Flask(__name__)
-rag = RAGRetriever("../data")  # assure-toi que le chemin ../data est correct
+CORS(app)  # AJOUT: Autorise toutes les origines
+
+rag = RAGRetriever("../data")
 
 @app.route("/ask", methods=["POST"])
 def ask():
@@ -25,7 +21,6 @@ def ask():
     
     context = "\n".join(rag.retrieve(q))
     
-    # CORRECTION : Utiliser le format LISTE de messages attendu par call_llm
     messages = [
         {
             "role": "system", 
@@ -37,7 +32,7 @@ def ask():
         }
     ]
     
-    answer = call_llm(messages)  # Maintenant on passe une liste, pas une string
+    answer = call_llm(messages)
     
     return jsonify({"answer": answer})
 
