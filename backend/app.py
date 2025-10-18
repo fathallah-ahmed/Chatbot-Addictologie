@@ -4,37 +4,80 @@ STATUT: PRODUCTION - Point d'entrée principal de l'API Flask
 """
 
 from flask import Flask, request, jsonify
-from flask_cors import CORS  # AJOUT
+from flask_cors import CORS
 from llm_service import call_llm
 from rag_service import RAGRetriever
+import traceback
+import logging
 
+# --- Configuration du logging ---
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+# --- Initialisation de Flask et du RAG ---
 app = Flask(__name__)
-CORS(app)  # AJOUT: Autorise toutes les origines
-
+CORS(app)
 rag = RAGRetriever("../data")
 
 @app.route("/ask", methods=["POST"])
 def ask():
-    q = request.json.get("question", "")
-    if not q:
-        return jsonify({"error": "Aucune question fournie"}), 400
-    
-    context = "\n".join(rag.retrieve(q))
-    
-    messages = [
-        {
-            "role": "system", 
-            "content": "Tu es un assistant utile. Réponds en utilisant le contexte fourni."
-        },
-        {
-            "role": "user", 
-            "content": f"Contexte : {context}\n\nQuestion : {q}\nRéponse :"
-        }
-    ]
-    
-    answer = call_llm(messages)
-    
-    return jsonify({"answer": answer})
+    """
+    Endpoint principal : reçoit une question, récupère le contexte via RAG,
+    envoie la requête au LLM, et renvoie la réponse enrichie.
+    """
+    try:
+        # 1️⃣ Récupération de la question
+        q = request.json.get("question", "").strip()
+        if not q:
+            return jsonify({"error": "Aucune question fournie"}), 400
+
+        logging.info(f"[QUESTION] {q}")
+
+        # 2️⃣ Récupération du contexte via RAG
+        results = rag.retrieve(q)
+        if isinstance(results[0], dict):
+            context = "\n".join([r.get("text", "") for r in results])
+            sources = [r.get("metadata", {}).get("source", "inconnue") for r in results]
+        else:
+            # compatibilité ancienne version
+            context = "\n".join(results)
+            sources = ["source inconnue"] * len(results)
+
+        # 3️⃣ Préparation des messages pour le LLM
+        messages = [
+            {
+                "role": "system",
+                "content": "Tu es un assistant expert en addictologie. Sois précis, empathique et concis."
+            },
+            {
+                "role": "user",
+                "content": f"Contexte : {context}\n\nQuestion : {q}\nRéponse :"
+            }
+        ]
+
+        # 4️⃣ Appel du modèle LLM
+        answer = call_llm(messages)
+
+        # 5️⃣ Journalisation + retour enrichi
+        logging.info(f"[ANSWER] {answer[:200]}...")
+
+        return jsonify({
+            "question": q,
+            "answer": answer,
+            "context_used": context,
+            "sources": sources
+        })
+
+    except Exception as e:
+        logging.error(f"[ERROR] {str(e)}")
+        traceback.print_exc()
+        return jsonify({"error": f"Erreur serveur : {str(e)}"}), 500
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    """Simple endpoint de vérification de l’état du serveur."""
+    return jsonify({"status": "OK", "message": "Nafass API en ligne"}), 200
+
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0", port=5000)

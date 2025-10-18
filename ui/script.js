@@ -619,3 +619,5 @@ function escapeHtml(text) {
 }
 
 setTimeout(initializeVoices, 1000);
+// NOUVELLES FONCTIONS POUR L'ÉDITION DES MESSAGES
+

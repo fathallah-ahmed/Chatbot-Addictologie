@@ -1,0 +1,50 @@
+[
+  {
+    "doc_id": "alcool.json::0",
+    "chunk_id": 0,
+    "text": "Une consommation excessive d’alcool nuit au foie, au cœur et au système nerveux. Elle augmente aussi le risque de dépendance.",
+    "source": "alcool.json",
+    "title": "Quels sont les risques de l’alcool ?",
+    "orig_file": "alcool.json"
+  },
+  {
+    "doc_id": "alcool.json::1",
+    "chunk_id": 0,
+    "text": "Fixez-vous des limites, buvez lentement, alternez avec de l’eau, et cherchez du soutien professionnel si besoin.",
+    "source": "alcool.json",
+    "title": "Comment réduire sa consommation d’alcool ?",
+    "orig_file": "alcool.json"
+  },
+  {
+    "doc_id": "drogue.json::0",
+    "chunk_id": 0,
+    "text": "Le cannabis peut affecter la mémoire, la concentration et la santé mentale, surtout chez les jeunes.",
+    "source": "drogue.json",
+    "title": "Le cannabis est-il dangereux ?",
+    "orig_file": "drogue.json"
+  },
+  {
+    "doc_id": "drogue.json::1",
+    "chunk_id": 0,
+    "text": "Parler à un professionnel, éviter les contextes de consommation et pratiquer des activités relaxantes peuvent aider.",
+    "source": "drogue.json",
+    "title": "Comment arrêter le cannabis ?",
+    "orig_file": "drogue.json"
+  },
+  {
+    "doc_id": "tabac.json::0",
+    "chunk_id": 0,
+    "text": "Le tabac provoque une dépendance à la nicotine et augmente les risques de cancer du poumon et de maladies cardiovasculaires.",
+    "source": "tabac.json",
+    "title": "Quels sont les effets du tabac sur la santé ?",
+    "orig_file": "tabac.json"
+  },
+  {
+    "doc_id": "tabac.json::1",
+    "chunk_id": 0,
+    "text": "Pour arrêter de fumer, vous pouvez utiliser des substituts nicotiniques, consulter un médecin ou rejoindre un programme d’accompagnement.",
+    "source": "tabac.json",
+    "title": "Comment arrêter de fumer ?",
+    "orig_file": "tabac.json"
+  }
+]

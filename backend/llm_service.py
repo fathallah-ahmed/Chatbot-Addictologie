@@ -23,7 +23,7 @@ HF_TOKEN = "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"  # <- remplace par ton token
 MODEL_ID = "google/gemma-2-9b-it"  # ou TinyLlama/... ou meta-llama/... selon ton choix
 
 # Paramètres par défaut
-DEFAULT_MAX_TOKENS = 128
+DEFAULT_MAX_TOKENS =160
 DEFAULT_TEMPERATURE = 0.7
 DEFAULT_TOP_P = 0.9
 
