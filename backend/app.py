@@ -7,6 +7,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from llm_service import call_llm
 from rag_service import RAGRetriever
+from response_formatter import format_response  # ✅ Ajout
 import traceback
 import logging
 
@@ -22,7 +23,7 @@ rag = RAGRetriever("../data")
 def ask():
     """
     Endpoint principal : reçoit une question, récupère le contexte via RAG,
-    envoie la requête au LLM, et renvoie la réponse enrichie.
+    envoie la requête au LLM, et renvoie la réponse enrichie et formatée.
     """
     try:
         # 1️⃣ Récupération de la question
@@ -38,7 +39,6 @@ def ask():
             context = "\n".join([r.get("text", "") for r in results])
             sources = [r.get("metadata", {}).get("source", "inconnue") for r in results]
         else:
-            # compatibilité ancienne version
             context = "\n".join(results)
             sources = ["source inconnue"] * len(results)
 
@@ -57,12 +57,18 @@ def ask():
         # 4️⃣ Appel du modèle LLM
         answer = call_llm(messages)
 
-        # 5️⃣ Journalisation + retour enrichi
-        logging.info(f"[ANSWER] {answer[:200]}...")
+        # 5️⃣ Formatage intelligent de la réponse
+        formatted = format_response(answer, q)
+
+        # 6️⃣ Journalisation + retour enrichi
+        logging.info(f"[ANSWER] {formatted['content'][:200]}...")
 
         return jsonify({
             "question": q,
-            "answer": answer,
+            "title": formatted["title"],
+            "icon": formatted["icon"],
+            "answer": formatted["content"],
+            "lines_count": formatted["lines_count"],
             "context_used": context,
             "sources": sources
         })
