@@ -75,15 +75,15 @@ async function handleUserMessage(message) {
         // Supprimer le message de chargement
         removeLoadingMessage(loadingMessage);
         
-        // Ajouter la réponse du bot
-        addBotMessage(botResponse);
+        // Ajouter la réponse du bot avec la question pour régénération
+        addBotMessage(botResponse, message);
         
     } catch (error) {
         // En cas d'erreur, supprimer le loading et afficher un message d'erreur
         removeLoadingMessage(loadingMessage);
         
         const errorMessage = "Désolé, je rencontre des difficultés techniques. Pouvez-vous réessayer ?";
-        addBotMessage(errorMessage);
+        addBotMessage(errorMessage, message);
         
         console.error('Erreur dans handleUserMessage:', error);
     }
@@ -213,6 +213,109 @@ function sendMessage() {
 function sendSuggestion(text) {
     document.getElementById('userInput').value = text;
     handleUserMessage(text);
+}
+
+// NOUVELLE FONCTION: Régénérer une réponse
+async function regenerateResponse(question, messageElement) {
+    console.log('🔄 Régénération de la réponse pour:', question);
+    
+    // Afficher un indicateur de chargement sur l'icône
+    const regenerateIcon = messageElement.querySelector('.regenerate-icon');
+    const originalHTML = regenerateIcon.innerHTML;
+    regenerateIcon.innerHTML = '⏳';
+    regenerateIcon.style.cursor = 'not-allowed';
+    regenerateIcon.style.opacity = '0.6';
+    
+    // Masquer temporairement le contenu existant
+    const messageContent = messageElement.querySelector('.message-content p');
+    const originalContent = messageContent.innerHTML;
+    messageContent.innerHTML = '<em>Régénération en cours...</em>';
+    
+    try {
+        // Appeler l'API avec la même question
+        const newResponse = await callChatbotAPI(question);
+        
+        // Mettre à jour le contenu avec la nouvelle réponse
+        messageContent.innerHTML = escapeHtml(newResponse);
+        
+        // Mettre à jour le bouton de lecture audio avec le nouveau texte
+        const speakBtn = messageElement.querySelector('.speak-btn');
+        speakBtn.setAttribute('data-text', newResponse);
+        
+        console.log('✅ Réponse régénérée avec succès');
+        
+    } catch (error) {
+        // En cas d'erreur, restaurer le contenu original
+        messageContent.innerHTML = originalContent;
+        console.error('❌ Erreur lors de la régénération:', error);
+        
+        // Afficher un message d'erreur temporaire
+        const errorMsg = document.createElement('div');
+        errorMsg.className = 'error-message';
+        errorMsg.textContent = 'Erreur lors de la régénération';
+        messageElement.appendChild(errorMsg);
+        
+        setTimeout(() => {
+            errorMsg.remove();
+        }, 3000);
+    } finally {
+        // Restaurer l'icône de régénération
+        regenerateIcon.innerHTML = originalHTML;
+        regenerateIcon.style.cursor = 'pointer';
+        regenerateIcon.style.opacity = '1';
+    }
+}
+
+// MODIFICATION: Fonction addBotMessage avec icône de régénération cliquable
+function addBotMessage(text, userQuestion = null) {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    
+    // Stocker la question originale si fournie (pour la régénération)
+    const questionAttribute = userQuestion ? `data-question="${escapeHtml(userQuestion)}"` : '';
+    
+    messageDiv.className = 'message bot-message';
+    messageDiv.innerHTML = `
+        <div class="message-avatar">
+            <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" alt="NAFASS">
+        </div>
+        <div class="message-content" ${questionAttribute}>
+            <p>${escapeHtml(text)}</p>
+            <div class="message-actions">
+                <button class="speak-btn" data-text="${escapeHtml(text)}">
+                    🔊 Lire le message
+                </button>
+                <span class="regenerate-icon" title="Régénérer la réponse">🔄</span>
+            </div>
+        </div>
+    `;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Gestion du bouton de lecture audio
+    const newSpeakBtn = messageDiv.querySelector('.speak-btn');
+    newSpeakBtn.addEventListener('click', function() {
+        speakText(this.getAttribute('data-text'), this);
+    });
+    
+    // Gestion de l'icône de régénération
+    const regenerateIcon = messageDiv.querySelector('.regenerate-icon');
+    regenerateIcon.addEventListener('click', function() {
+        const messageContent = this.closest('.message-content');
+        const originalQuestion = messageContent.getAttribute('data-question');
+        
+        if (originalQuestion) {
+            regenerateResponse(originalQuestion, messageDiv);
+        } else {
+            // Si pas de question stockée, utiliser le dernier message utilisateur
+            const userMessages = document.querySelectorAll('.user-message');
+            if (userMessages.length > 0) {
+                const lastUserMessage = userMessages[userMessages.length - 1];
+                const lastQuestion = lastUserMessage.querySelector('.message-content p').textContent;
+                regenerateResponse(lastQuestion, messageDiv);
+            }
+        }
+    });
 }
 
 // Le reste du code reste identique (STT, TTS, etc.)
@@ -586,32 +689,6 @@ function addUserMessage(text) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-function addBotMessage(text) {
-    const chatMessages = document.getElementById('chatMessages');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = 'message bot-message';
-    messageDiv.innerHTML = `
-        <div class="message-avatar">
-            <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" alt="NAFASS">
-        </div>
-        <div class="message-content">
-            <p>${escapeHtml(text)}</p>
-            <div class="message-actions">
-                <button class="speak-btn" data-text="${escapeHtml(text)}">
-                    🔊 Lire le message
-                </button>
-            </div>
-        </div>
-    `;
-    chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-    
-    const newSpeakBtn = messageDiv.querySelector('.speak-btn');
-    newSpeakBtn.addEventListener('click', function() {
-        speakText(this.getAttribute('data-text'), this);
-    });
-}
-
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
@@ -619,5 +696,3 @@ function escapeHtml(text) {
 }
 
 setTimeout(initializeVoices, 1000);
-// NOUVELLES FONCTIONS POUR L'ÉDITION DES MESSAGES
-
