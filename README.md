@@ -11,10 +11,15 @@
 
 ### 🎯 Objectifs Principaux
 
-- 🤖 **Assistance 24/7** : Offrir un support immédiat sur les questions d'addictologie
-- 🎓 **Éducation Santé** : Diffuser des informations médicales validées (OMS, santé.gouv)
-- 🔒 **Confidentialité** : Traitement local des données sensibles
-- 🚀 **Adaptabilité** : Fine-tuning spécialisé sur le domaine médical français
+🤖 Assistance 24/7 : Offrir un soutien continu et confidentiel aux utilisateurs.
+
+🎓 Éducation Santé : Diffuser des informations médicales validées (OMS, Santé.gouv).
+
+🔒 Confidentialité : Traitement local des données sensibles.
+
+🚀 Adaptabilité : Fine-tuning du modèle IA sur le domaine médical français.
+
+🧠 Surveillance IA : Évaluer la qualité des réponses et détecter automatiquement les anomalies.
 
 ## 🏗️ Architecture Technique
 
@@ -39,6 +44,7 @@ Question → RAG (Recherche) → Contexte → LLM → Réponse Contextualisée
 - Hugging Face Transformers
 - PEFT & LoRA (Parameter-Efficient Fine-Tuning)
 - Sentence Transformers
+- scikit-learn (IsolationForest)
 - FAISS (Facebook AI Similarity Search)
 🌐 API 
 - Flask (API REST)
@@ -58,3 +64,5 @@ http://127.0.0.1:5000/ask
 {
     "question": "entrer votre prompt"
 }
+"Nafass-ChatBot : un assistant IA pour l’accompagnement addictologique intelligent et responsable."
+— Équipe Nafass, 2025
