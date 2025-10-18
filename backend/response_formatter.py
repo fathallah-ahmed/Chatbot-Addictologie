@@ -1,7 +1,7 @@
 """
 FICHIER: response_formatter.py
 AUTEUR: Expert AI - Système RAG Avancé
-VERSION: 3.2.1 - EXCELLENCE ÉPURÉE AVEC RETOURS LIGNE (PATCH)
+VERSION: 3.3 - EXCELLENCE ÉPURÉE AVEC FILTRAGE INTELLIGENT
 DESCRIPTION: Moteur de post-traitement premium pour réponses LLM
              Transforme les réponses brutes en expériences conversationnelles d'exception
 """
@@ -23,7 +23,7 @@ logger = logging.getLogger('RESPONSE_FORMATTER_PREMIUM')
 class PremiumResponseFormatter:
     """
     Moteur d'excellence pour le formatage des réponses LLM
-    Design épuré avec retours à ligne optimisés
+    Design épuré avec filtrage intelligent des réponses
     """
 
     def __init__(self):
@@ -70,6 +70,13 @@ class PremiumResponseFormatter:
                 'icon': '⚗️',
                 'color': '#06B6D4',
                 'template': 'technical'
+            },
+            'general': {
+                'keywords': [],
+                'title': '💬 Réponse détaillée',
+                'icon': '💭',
+                'color': '#6B7280',
+                'template': 'general'
             }
         }
 
@@ -81,6 +88,15 @@ class PremiumResponseFormatter:
             'max_paragraph_length': 200,
             'max_line_length': 60
         }
+
+        # Patterns de réponses indésirables à filtrer
+        self.unwanted_patterns = [
+            r'^(en tant qu.*intelligence artificielle|je suis.*ai|en tant qu.*assistant|.*modèle.*linguistique|.*ne.*pas.*capacité)',
+            r'^(désolé,? |malheureusement,? |je ne peux pas |je ne suis pas |je ne dispose pas)',
+            r'^(il est difficile de |je ne peux pas prédire |je ne peux pas savoir |je ne peux pas déterminer)',
+            r'^(je ne.*pas.*information|je n.*ai pas.*accès|je ne.*pas.*prédire|je ne.*pas.*savoir)',
+            r'^(cette question.*ne.*pas.*domaine|hors.*domaine|en dehors.*domaine)'
+        ]
 
     def analyze_query_intent(self, question: str) -> Dict[str, float]:
         """
@@ -112,28 +128,66 @@ class PremiumResponseFormatter:
 
             scores[pattern_type] = min(score, 1.0)
 
+        # Si aucun pattern ne correspond, utiliser 'general'
+        if max(scores.values()) < 0.3:
+            scores['general'] = 0.5
+
         logger.debug(f"Analyse d'intention - Scores: {scores}")
         return scores
+
+    def _filter_unwanted_response(self, text: str) -> str:
+        """
+        Filtre les réponses indésirables qui commencent par des excuses ou limitations
+        Retourne le texte nettoyé ou une chaîne vide si la réponse est à rejeter
+        """
+        lines = text.strip().split('\n')
+        filtered_lines = []
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+                
+            # Vérifier si la ligne correspond à un pattern indésirable
+            is_unwanted = False
+            for pattern in self.unwanted_patterns:
+                if re.match(pattern, line, re.IGNORECASE):
+                    is_unwanted = True
+                    break
+            
+            if not is_unwanted:
+                filtered_lines.append(line)
+        
+        filtered_text = '\n'.join(filtered_lines).strip()
+        
+        # Si après filtrage il ne reste que très peu de contenu, considérer comme réponse vide
+        if len(filtered_text.split()) < 5:  # Moins de 5 mots
+            return ""
+            
+        return filtered_text
 
     def enhance_emotional_intelligence(self, text: str, intent_type: str) -> str:
         """
         Améliore l'intelligence émotionnelle avec des messages personnalisés
         Niveau expert en communication thérapeutique
         """
+        # Appliquer d'abord le filtrage des réponses indésirables
+        filtered_text = self._filter_unwanted_response(text)
+        if not filtered_text:
+            return "🔍 Je n'ai pas assez d'informations pour répondre à cette question de manière précise. Pourriez-vous reformuler ou poser une question plus spécifique ?"
+        
         enhancements = {
             'guide': "💪 Excellente initiative - Vous avez fait le premier pas en demandant de l aide, c est déjà une immense force !\n\n",
             'warning': "🛡️ Sécurité maximale - Votre bien-être est notre priorité absolue. Voici les informations cruciales :\n\n",
             'motivation': "🌈 Soutien total - Chaque jour sans addiction est une victoire remarquable. Continuez comme ça !\n\n",
             'technical': "🔬 Précision experte - Analyse détaillée basée sur les dernières recommandations médicales :\n\n",
             'list': "📊 Vision claire - Voici une analyse structurée pour vous aider à y voir plus clair :\n\n",
-            'explanation': "💡 Compréhension approfondie - Permettez-moi de vous expliquer en détail :\n\n"
+            'explanation': "💡 Compréhension approfondie - Permettez-moi de vous expliquer en détail :\n\n",
+            'general': "💬 Voici ce que je peux vous dire sur ce sujet :\n\n"
         }
 
-        return enhancements.get(intent_type, "💬 Réponse personnalisée - Voici ce que je peux vous partager :\n\n") + text
+        return enhancements.get(intent_type, "💬 Réponse personnalisée - Voici ce que je peux vous partager :\n\n") + filtered_text
 
-    # =========================
-    # PATCH 1 : Retours à la ligne fiables après : ? ! .
-    # =========================
     def _apply_punctuation_line_breaks(self, text: str) -> str:
         """
         Ajoute un retour à la ligne après :, ?, ! et .
@@ -146,8 +200,6 @@ class PremiumResponseFormatter:
         text = re.sub(r'(\d{1,2}):(\d{2})', rf'\1{COL_TOKEN}\2', text)    # 14:30 -> 14§COL§30
 
         # 2) Retour à la ligne après la ponctuation principale
-        #    - (?!\n) évite d'ajouter un \n s'il y en a déjà un
-        #    - gère "?!", "...", "!!" (coupe après la séquence)
         text = re.sub(r'([:?!\.]+)(?!\n)', r'\1\n', text)
 
         # 3) Nettoyer les espaces avant \n (": \n" -> ":\n")
@@ -176,7 +228,8 @@ class PremiumResponseFormatter:
             'warning': self._format_premium_warning,
             'technical': self._format_premium_technical,
             'motivation': self._format_premium_motivation,
-            'explanation': self._format_premium_explanation
+            'explanation': self._format_premium_explanation,
+            'general': self._format_premium_general
         }
 
         formatter = formatting_strategies.get(template, self._format_premium_standard)
@@ -230,6 +283,10 @@ class PremiumResponseFormatter:
         """Formatage explication - Pédagogie avancée"""
         return f"🔍 Explication détaillée\n\n{text}\n\n💡 Pour aller plus loin : N hésitez pas à demander des précisions supplémentaires"
 
+    def _format_premium_general(self, text: str) -> str:
+        """Formatage général - Réponses diverses"""
+        return f"💭 Information détaillée\n\n{text}"
+
     def _format_premium_standard(self, text: str) -> str:
         """Formatage standard - Excellence par défaut"""
         text = re.sub(r'\*', '', text)
@@ -247,9 +304,6 @@ class PremiumResponseFormatter:
 
         return '\n'.join(formatted_paragraphs).strip()
 
-    # =========================
-    # PATCH 2 : Préserver les \n lors de l'optimisation
-    # =========================
     def _apply_ultimate_line_breaks(self, text: str) -> str:
         """
         Application de retours à la ligne ultimes - Excellence de lisibilité
@@ -260,9 +314,6 @@ class PremiumResponseFormatter:
         # Retours après virgules dans fragments très longs (préserve lisibilité)
         text = re.sub(r'(,\s)([^,\n]{40,})', r',\n\2', text)
 
-        # Retours stratégiques pour aération (sans casser déjà présent)
-        text = re.sub(r'(\s)(et\s|ou\s|mais\s|donc\s|car\s)', r'\n\2', text)
-
         # Nettoyage final
         text = re.sub(r'\n{3,}', '\n\n', text)
         text = re.sub(r' \n', '\n', text)
@@ -272,7 +323,6 @@ class PremiumResponseFormatter:
     def _optimize_paragraph_structure(self, text: str) -> str:
         """
         Optimisation avancée de la structure des paragraphes
-        (préserve les retours à la ligne ajoutés après la ponctuation).
         """
         # Respecter les retours à la ligne existants
         text = self._apply_punctuation_line_breaks(text)
@@ -297,7 +347,6 @@ class PremiumResponseFormatter:
                         sl = len(s)
                         if current_len + sl > 100 or len(current_chunk) >= 2:
                             if current_chunk:
-                                # Préserver les retours à la ligne
                                 optimized_paragraphs.append('\n'.join(current_chunk))
                             current_chunk = [s]
                             current_len = sl
@@ -307,7 +356,7 @@ class PremiumResponseFormatter:
 
                     if current_chunk:
                         optimized_paragraphs.append('\n'.join(current_chunk))
-                    optimized_paragraphs.append("")  # espacement
+                    optimized_paragraphs.append("")
                 else:
                     optimized_paragraphs.append(para)
             else:
@@ -354,7 +403,7 @@ class PremiumResponseFormatter:
     def format_response(self, raw_answer: str, question: str, context: Optional[Dict] = None) -> Dict:
         """
         Point d'entrée principal - Transformation premium des réponses
-        Design épuré avec retours à ligne optimisés
+        Design épuré avec filtrage intelligent
         """
         try:
             logger.info(f"Début du formatage premium - Question: '{question[:80]}...'")
@@ -370,8 +419,12 @@ class PremiumResponseFormatter:
             # Application du formatage premium
             formatted_content = self.apply_premium_formatting(raw_answer, pattern_config['template'])
 
-            # Amélioration émotionnelle experte
+            # Amélioration émotionnelle experte avec filtrage
             enhanced_content = self.enhance_emotional_intelligence(formatted_content, primary_intent)
+
+            # Si le contenu est vide après filtrage, utiliser le fallback
+            if not enhanced_content.strip() or enhanced_content == "🔍 Je n'ai pas assez d'informations pour répondre à cette question de manière précise. Pourriez-vous reformuler ou poser une question plus spécifique ?":
+                return self._get_premium_fallback_response(raw_answer, question)
 
             # Optimisations avancées de lisibilité
             enhanced_content = self._apply_ultimate_line_breaks(enhanced_content)
@@ -385,14 +438,15 @@ class PremiumResponseFormatter:
             # Construction de la réponse structurée premium
             structured_response = {
                 "metadata": {
-                    "version": "3.2.1-EPURE",
+                    "version": "3.3-EPURE",
                     "timestamp": datetime.now().isoformat(),
                     "processing_tier": "EXCELLENCE",
                     "intent_detected": primary_intent,
                     "confidence_score": round(confidence, 3),
                     "quality_score": round(overall_quality, 3),
                     "word_count_original": len(raw_answer.split()),
-                    "word_count_enhanced": len(enhanced_content.split())
+                    "word_count_enhanced": len(enhanced_content.split()),
+                    "filtering_applied": True
                 },
                 "presentation": {
                     "title": pattern_config['title'],
@@ -450,6 +504,11 @@ class PremiumResponseFormatter:
                 "Créer un tableau de bord de suivi",
                 "Transformer en plan d action concret"
             ],
+            'general': [
+                "Poser une question complémentaire",
+                "Demander des précisions techniques",
+                "Explorer d autres aspects du sujet"
+            ],
             'default': [
                 "Poser une question complémentaire",
                 "Demander des précisions techniques",
@@ -468,11 +527,12 @@ class PremiumResponseFormatter:
 
         return {
             "metadata": {
-                "version": "3.2.1-EPURE",
+                "version": "3.3-EPURE",
                 "timestamp": datetime.now().isoformat(),
                 "processing_tier": "FALLBACK",
                 "error_occurred": True,
-                "fallback_used": True
+                "fallback_used": True,
+                "filtering_applied": True
             },
             "presentation": {
                 "title": "💬 Réponse immédiate - Mode standard",
@@ -516,30 +576,30 @@ def format_response(answer: str, question: str) -> Dict:
 
 # Démonstration
 if __name__ == "__main__":
-    print("Système de formatage premium - Démonstration avec retours à ligne\n")
+    print("Système de formatage premium - Démonstration avec filtrage intelligent\n")
 
     formatter = PremiumResponseFormatter()
 
-    # Test avec un texte contenant différentes ponctuations
-    test_question = "Comment gérer le stress au quotidien ?"
+    # Test avec une réponse problématique
+    test_question = "Qui va gagner la coupe du monde 2026 ?"
     test_answer = """
-    Pour gérer le stress au quotidien: commencez par identifier vos sources de stress. Ensuite, pratiquez la respiration profonde: inspirez lentement, retenez votre souffle, expirez doucement. Vous pouvez aussi essayer la méditation? C'est très efficace! L'exercice physique est également important. N'oubliez pas de prendre des pauses régulières. Finalement, assurez-vous de dormir suffisamment.
+    En tant qu'assistant IA, je ne peux pas prédire l'avenir avec certitude. La Coupe du Monde 2026 n'a pas encore eu lieu et son issue dépend de nombreux facteurs imprévisibles comme la forme des équipes, les blessures, et la performance du jour. Cependant, on peut s'attendre à une compétition intense entre les favorites comme la France, le Brésil, l'Argentine et l'Angleterre.
     """
 
     result = formatter.format_response(test_answer, test_question)
-    print("Résultat premium avec retours à ligne après ponctuation:")
+    print("Résultat premium avec filtrage des réponses indésirables:")
     print(result["content"]["enhanced"])
     print(f"\nQualité: {result['metadata']['quality_score']:.3f} | Temps de lecture: {result['content']['estimated_reading_time']}")
 
     print("\n" + "="*60 + "\n")
 
-    # Test avec une liste complexe
-    list_question = "Quels sont les avantages de l'exercice physique ?"
-    list_answer = """
-    Les avantages sont nombreux: amélioration de la santé cardiovasculaire. Renforcement du système immunitaire. Réduction du stress et de l'anxiété. Meilleure qualité de sommeil. Augmentation de l'énergie quotidienne. Amélioration de l'humeur générale. Prévention des maladies chroniques. Renforcement de la confiance en soi.
+    # Test avec une bonne réponse
+    good_question = "Comment améliorer ma santé cardiovasculaire ?"
+    good_answer = """
+    Pour améliorer votre santé cardiovasculaire: pratiquez une activité physique régulière. Adoptez une alimentation équilibrée riche en fruits et légumes. Gérez votre stress grâce à la méditation ou au yoga. Évitez le tabac et limitez votre consommation d'alcool. Surveillez votre tension artérielle et votre cholestérol régulièrement.
     """
 
-    list_result = formatter.format_response(list_answer, list_question)
-    print("Résultat premium - Liste avec retours à la ligne:")
-    print(list_result["content"]["enhanced"])
-    print(f"\nQualité: {list_result['metadata']['quality_score']:.3f}")
+    good_result = formatter.format_response(good_answer, good_question)
+    print("Résultat premium - Bonne réponse conservée:")
+    print(good_result["content"]["enhanced"])
+    print(f"\nQualité: {good_result['metadata']['quality_score']:.3f}")
