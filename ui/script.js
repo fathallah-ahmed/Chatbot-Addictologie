@@ -4,7 +4,6 @@ let selectedVoice = null;
 let recognition = null;
 let isListening = false;
 let recognitionTimeout = null;
-let isFirstInteraction = true; // NOUVEAU: pour suivre la première interaction
 
 // Configuration de l'API
 const API_CONFIG = {
@@ -33,7 +32,7 @@ function initializeEventListeners() {
     // Bouton micro
     document.getElementById('voiceBtn').addEventListener('click', toggleSpeechRecognition);
     
-    // Suggestions rapides - MODIFIÉ pour utiliser handleUserMessage
+    // Suggestions rapides - MODIFIÉ pour appeler directement l'API
     document.querySelectorAll('.suggestion').forEach(suggestion => {
         suggestion.addEventListener('click', function() {
             const suggestionText = this.getAttribute('data-text');
@@ -50,7 +49,7 @@ function initializeEventListeners() {
     });
 }
 
-// NOUVELLE FONCTION: Gérer les messages utilisateur (unifie l'envoi)
+// FONCTION: Gérer les messages utilisateur (appel direct à l'API)
 async function handleUserMessage(message) {
     if (message.trim() === '') return;
 
@@ -61,16 +60,8 @@ async function handleUserMessage(message) {
     const loadingMessage = addLoadingMessage();
     
     try {
-        let botResponse;
-        
-        // Si c'est la première interaction, utiliser les réponses par défaut
-        if (isFirstInteraction) {
-            botResponse = getDefaultResponse(message);
-            isFirstInteraction = false; // Passer au backend pour les prochaines interactions
-        } else {
-            // Utiliser l'API backend pour les interactions suivantes
-            botResponse = await callChatbotAPI(message);
-        }
+        // Appeler directement l'API backend
+        const botResponse = await callChatbotAPI(message);
         
         // Supprimer le message de chargement
         removeLoadingMessage(loadingMessage);
@@ -91,34 +82,6 @@ async function handleUserMessage(message) {
     // Vider le champ de saisie
     document.getElementById('userInput').value = '';
     updateVoiceStatus('idle');
-}
-
-// FONCTION: Réponses par défaut pour la première interaction
-function getDefaultResponse(userMessage) {
-    const defaultResponses = {
-        // Réponses pour les suggestions
-        "Je souhaite arrêter de fumer": "Excellent décision ! L'arrêt du tabac est l'une des meilleures choses que vous puissiez faire pour votre santé. Je peux vous accompagner avec des stratégies personnalisées. Parlez-moi de votre consommation actuelle.",
-        "J'aimerais réduire ma consommation d'alcool": "Je vous comprends. La réduction de la consommation d'alcool peut avoir des bénéfices importants sur la santé. Pouvez-vous me décrire vos habitudes actuelles ?",
-        "J'ai besoin d'aide pour une addiction": "Je suis là pour vous aider. Pouvez-vous me parler de ce qui vous préoccupe particulièrement ? Plus vous me donnerez de détails, mieux je pourrai vous orienter.",
-        
-        // Réponses génériques
-        "bonjour": "Bonjour ! Je suis NAFASS, votre assistant spécialisé en addictologie. Comment puis-je vous aider aujourd'hui ?",
-        "salut": "Salut ! Je suis là pour vous accompagner. De quoi aimeriez-vous parler ?",
-        "merci": "Je vous en prie ! N'hésitez pas si vous avez d'autres questions ou préoccupations.",
-        "aide": "Bien sûr ! Je peux vous aider avec les addictions au tabac, à l'alcool, aux drogues, ou d'autres dépendances. De quoi avez-vous besoin ?"
-    };
-
-    // Chercher une réponse spécifique, sinon réponse générique
-    const lowerMessage = userMessage.toLowerCase();
-    
-    for (const [key, response] of Object.entries(defaultResponses)) {
-        if (lowerMessage.includes(key.toLowerCase())) {
-            return response;
-        }
-    }
-
-    // Réponse par défaut si aucun match
-    return "Je comprends votre message. Pour vous offrir le meilleur accompagnement, je vais maintenant utiliser mes connaissances spécialisées. Pouvez-vous reformuler votre question ?";
 }
 
 // FONCTION: Appeler l'API backend
@@ -207,12 +170,6 @@ function sendMessage() {
     const userInput = document.getElementById('userInput');
     const message = userInput.value.trim();
     handleUserMessage(message);
-}
-
-// MODIFICATION: Fonction sendSuggestion utilisant handleUserMessage
-function sendSuggestion(text) {
-    document.getElementById('userInput').value = text;
-    handleUserMessage(text);
 }
 
 // NOUVELLE FONCTION: Régénérer une réponse
