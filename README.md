@@ -30,12 +30,30 @@
 | **Fine-tuning LoRA** | `google/flan-t5-small` | Réponses rapides | Addictologie |
 | **LLM de Référence** | `google/gemma-2-9b-it` | Questions complexes | Généraliste + contexte |
 
-### 🔍 Système RAG (Retrieval-Augmented Generation)
-Question → RAG (Recherche) → Contexte → LLM → Réponse Contextualisée
+### RAG Hybride — Architecture d’Intelligence Documentaire
+Description
 
-- **Embeddings** : `all-MiniLM-L6-v2` (optimisé français)
-- **Base Vectorielle** : FAISS pour recherche rapide
-- **Sources** : Données OMS, INCa, santé.gouv
+Le projet intègre deux services complémentaires :
+
+rag_service.py — Récupération contextuelle simple basée sur la similarité textuelle.
+
+rag_vector_service.py — Récupération vectorielle avancée basée sur FAISS et l’analyse sémantique des ressources fiables (PDF scientifiques et gouvernementaux).
+📚 Données utilisées
+
+Les données sont issues du dossier :/data/ressources_fiables/
+⚙️ Fonctionnement
+
+Lorsqu’une question ne nécessite pas de sources externes, le RAG standard génère la réponse contextuelle.
+
+Si la question implique une donnée scientifique, statistique ou chiffrée, le RAG vectoriel est automatiquement sollicité.
+
+En cas de requête mixte, les deux services collaborent : les chunks du vector store et les contextes du RAG standard sont fusionnés avant l’appel au modèle LLM.
+| Service                 | Rôle                                                              | Fichiers principaux                                |
+| ----------------------- | ----------------------------------------------------------------- | -------------------------------------------------- |
+| `ingestion_service.py`  | Indexe les PDF, extrait les *chunks* et construit l’index FAISS   | `data/vector_store/`                               |
+| `rag_vector_service.py` | Interroge l’index FAISS, renvoie les passages les plus pertinents | `vectorindex.faiss`, `metadata.json`, `chunks.pkl` |
+| `rag_service.py`        | Fournit un contexte textuel basé sur les données locales          | `data/`                                            |
+| `app.py`                | Orchestration globale entre les services RAG et LLM               | —                                                  |
 
 ## 🛠️ Stack Technique
 
