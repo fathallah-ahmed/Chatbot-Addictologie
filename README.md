@@ -57,7 +57,19 @@ cd Nafass-ChatBot
 # 2. Installer les dépendances
 python -m pip install -r requirements.txt
 
-# 3. Lancer l'API
+# 3. Exécuter la suite de tests backend
+python -m pytest backend/tests -q
+
+Vous devriez voir un résumé similaire à :
+
+```
+..........  [100%]
+10 passed in 0.11s
+```
+
+Si `pytest` n'est pas installé en tant que commande, cette invocation via `python -m` fonctionne sur Windows.
+
+# 4. Lancer l'API
 python app.py
 Utilisation API - postman
 http://127.0.0.1:5000/ask
