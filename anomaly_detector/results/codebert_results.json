@@ -1,0 +1,248 @@
+{
+    "scanned_root": "C:\\Users\\ririr\\NAFASS\\backend",
+    "scanned_files": 4,
+    "issues": [
+        {
+            "type": "missing_docstring",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\data_loader.py",
+            "line": 1,
+            "detail": "Fonction/Classe/Module '<module>' sans docstring"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\data_loader.py",
+            "line": 15,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\data_loader.py",
+            "line": 18,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\data_loader.py",
+            "line": 39,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\data_loader.py",
+            "line": 54,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "codebert_fingerprint",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\data_loader.py",
+            "detail": "Empreinte vectorielle CodeBERT=17.939"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\llm_service.py",
+            "line": 105,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\llm_service.py",
+            "line": 106,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\llm_service.py",
+            "line": 117,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "codebert_fingerprint",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\llm_service.py",
+            "detail": "Empreinte vectorielle CodeBERT=18.734"
+        },
+        {
+            "type": "missing_docstring",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_service.py",
+            "line": 44,
+            "detail": "Fonction/Classe/Module '_ensure_index_dir' sans docstring"
+        },
+        {
+            "type": "missing_docstring",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_service.py",
+            "line": 70,
+            "detail": "Fonction/Classe/Module 'RAGRetriever' sans docstring"
+        },
+        {
+            "type": "missing_docstring",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_service.py",
+            "line": 71,
+            "detail": "Fonction/Classe/Module '__init__' sans docstring"
+        },
+        {
+            "type": "missing_docstring",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_service.py",
+            "line": 87,
+            "detail": "Fonction/Classe/Module '_load_index' sans docstring"
+        },
+        {
+            "type": "missing_docstring",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_service.py",
+            "line": 331,
+            "detail": "Fonction/Classe/Module 'get_metadata' sans docstring"
+        },
+        {
+            "type": "missing_docstring",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_service.py",
+            "line": 336,
+            "detail": "Fonction/Classe/Module 'get_all_docs' sans docstring"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_service.py",
+            "line": 344,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_service.py",
+            "line": 108,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_service.py",
+            "line": 150,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_service.py",
+            "line": 169,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_service.py",
+            "line": 221,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_service.py",
+            "line": 346,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_service.py",
+            "line": 40,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_service.py",
+            "line": 89,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_service.py",
+            "line": 97,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_service.py",
+            "line": 143,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_service.py",
+            "line": 99,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_service.py",
+            "line": 100,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_service.py",
+            "line": 121,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_service.py",
+            "line": 327,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "codebert_fingerprint",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_service.py",
+            "detail": "Empreinte vectorielle CodeBERT=18.146"
+        },
+        {
+            "type": "missing_docstring",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_vector_service.py",
+            "line": 1,
+            "detail": "Fonction/Classe/Module '<module>' sans docstring"
+        },
+        {
+            "type": "missing_docstring",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_vector_service.py",
+            "line": 7,
+            "detail": "Fonction/Classe/Module 'RagVectorService' sans docstring"
+        },
+        {
+            "type": "missing_docstring",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_vector_service.py",
+            "line": 8,
+            "detail": "Fonction/Classe/Module '__init__' sans docstring"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_vector_service.py",
+            "line": 32,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_vector_service.py",
+            "line": 92,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_vector_service.py",
+            "line": 93,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_vector_service.py",
+            "line": 94,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_vector_service.py",
+            "line": 96,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "debug_print",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_vector_service.py",
+            "line": 78,
+            "detail": "print() présent (utiliser des logs structurés plutôt)"
+        },
+        {
+            "type": "codebert_fingerprint",
+            "file": "C:\\Users\\ririr\\NAFASS\\backend\\rag_vector_service.py",
+            "detail": "Empreinte vectorielle CodeBERT=17.462"
+        }
+    ]
+}

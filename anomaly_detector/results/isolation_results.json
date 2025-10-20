@@ -1,0 +1,62 @@
+{
+    "total_points": 5,
+    "anomalies_detected": 1,
+    "rows": [
+        {
+            "timestamp": "2025-10-19T18:00:00",
+            "latency_ms": 180,
+            "loss": 0.42,
+            "perplexity": 12.3,
+            "accuracy": 0.82,
+            "anomaly": 1,
+            "score": 0.16135691803174007
+        },
+        {
+            "timestamp": "2025-10-19T18:05:00",
+            "latency_ms": 190,
+            "loss": 0.41,
+            "perplexity": 12.1,
+            "accuracy": 0.83,
+            "anomaly": 1,
+            "score": 0.1649007760957476
+        },
+        {
+            "timestamp": "2025-10-19T18:10:00",
+            "latency_ms": 175,
+            "loss": 0.39,
+            "perplexity": 11.9,
+            "accuracy": 0.84,
+            "anomaly": 1,
+            "score": 0.1331091876482935
+        },
+        {
+            "timestamp": "2025-10-19T18:15:00",
+            "latency_ms": 950,
+            "loss": 0.9,
+            "perplexity": 40.0,
+            "accuracy": 0.5,
+            "anomaly": 1,
+            "score": 0.013458084344337928
+        },
+        {
+            "timestamp": "2025-10-19T18:25:00",
+            "latency_ms": 2000,
+            "loss": 1.2,
+            "perplexity": 50.0,
+            "accuracy": 0.4,
+            "anomaly": -1,
+            "score": -0.05383233737735171
+        }
+    ],
+    "anomalous_rows": [
+        {
+            "timestamp": "2025-10-19T18:25:00",
+            "latency_ms": 2000,
+            "loss": 1.2,
+            "perplexity": 50.0,
+            "accuracy": 0.4,
+            "anomaly": -1,
+            "score": -0.05383233737735171
+        }
+    ]
+}
