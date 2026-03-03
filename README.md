@@ -69,7 +69,7 @@ En cas de requête mixte, les deux services collaborent : les chunks du vector s
 
 ### Installation & Démarrage
 # 1. Cloner le repository
-git clone https://github.com/Mey-Youssef/NAFASS.git
+git clone https://github.com/fathallah-ahmed/Chatbot-Addictologie
 cd Nafass-ChatBot
 
 # 2. Installer les dépendances
